@@ -5,11 +5,12 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
 	"os/signal"
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/go-ping/ping"
 )
 
 type Pinger struct {
@@ -77,21 +78,31 @@ func (p *Pinger) pingLoop(ctx context.Context, ip string) {
 	}
 }
 
-// 执行一次 Ping
+// 使用 go-ping 库执行 Ping
 func (p *Pinger) doPing(ip string) {
-	// Windows: ping -n 1 -w 2000
-	// Linux/macOS: ping -c 1 -W 2
-	cmd := exec.Command("ping", "-c", "1", "-W", "2", ip) // Linux/macOS
-	if os.Getenv("GOOS") == "windows" {
-		cmd = exec.Command("ping", "-n", "1", "-w", "2000", ip)
+	pinger, err := ping.NewPinger(ip)
+	if err != nil {
+		fmt.Printf("[%s] %s ❌ 创建Pinger失败: %v\n", time.Now().Format("15:04:05"), ip, err)
+		return
 	}
 
-	_, err := cmd.CombinedOutput()
+	pinger.Count = 1 // 只发1个包
+	pinger.Timeout = 3 * time.Second
+	pinger.SetPrivileged(true) // Windows 下建议设为 true（需要管理员权限）
+
+	err = pinger.Run()
 	if err != nil {
 		fmt.Printf("[%s] %s ❌ Ping失败: %v\n", time.Now().Format("15:04:05"), ip, err)
+		return
+	}
+
+	stats := pinger.Statistics()
+	if stats.PacketsRecv > 0 {
+		fmt.Printf("[%s] %s ✅ Ping成功 RTT: %v\n",
+			time.Now().Format("15:04:05"), ip, stats.AvgRtt)
 	} else {
-		fmt.Printf("[%s] %s ✅ Ping成功\n", time.Now().Format("15:04:05"), ip)
-		// 可在此解析 output 获取延迟等信息
+		fmt.Printf("[%s] %s ❌ Ping失败 (0 packets received)\n",
+			time.Now().Format("15:04:05"), ip)
 	}
 }
 
@@ -103,7 +114,7 @@ func main() {
 	pinger.AddTarget("8.8.8.8")
 	pinger.AddTarget("1.1.1.1")
 
-	// 命令行交互：输入 IP 添加，输入 rm:IP 删除，输入 q 退出
+	// 命令行交互
 	go func() {
 		scanner := bufio.NewScanner(os.Stdin)
 		fmt.Println("输入 IP 添加监控，输入 rm:IP 删除，输入 q 退出")
