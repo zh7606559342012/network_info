@@ -9,10 +9,10 @@ func NewRouter() *gin.Engine {
 	router := gin.New()
 
 	omsRouter := router.Group("/monitor_agent/v1")
-	akaRouter := router.Group("/monitor_agent/v1/common/eap_aka")
+	gnbRouter := router.Group("/monitor_agent/v1/common/eap_aka")
 
 	omsRoutes(omsRouter)
-	akaRouters(akaRouter)
+	gnbRouters(gnbRouter)
 
 	return router
 }
@@ -20,4 +20,11 @@ func NewRouter() *gin.Engine {
 func omsRoutes(router *gin.RouterGroup) {
 	omsLyr := new(controllers.OmsLyrController)
 	router.GET("/common/heartbeat", omsLyr.HandlerHeartbeat)
+}
+
+func gnbRouters(router *gin.RouterGroup) {
+	gnbListLyr := new(controllers.GnbListLyrController)
+	router.GET("", gnbListLyr.HandlerGetPageGnbList)
+	router.POST("", gnbListLyr.HandlerAddGnbList)
+	router.DELETE("", gnbListLyr.HandlerDelGnbList)
 }
