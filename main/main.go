@@ -1,16 +1,29 @@
 package main
 
 import (
-	"fmt"
-	"net"
-	"os"
-	"strconv"
-	"sync"
-	"time"
-
-	"github.com/gin-gonic/gin"
+	"network_info/main/conf"
+	"network_info/main/dbConn"
+	"network_info/main/modules"
+	"network_info/main/server"
 )
 
+var Version string
+
+func main() {
+	conf.ConfInit(Version)
+	conf.LoggerInit()
+	conf.Log.Infof("######monitor_agent start,version:%s#########", conf.CmnConf.Appconf.Ver)
+
+	go dbConn.DbConnInit()
+
+	//modules func
+	modules.Run()
+
+	//server api start
+	server.Start()
+}
+
+/*
 type BaseStation struct {
 	StationID uint32 `json:"station_id"`
 	IP        string `json:"ip"`
@@ -164,5 +177,7 @@ func writePingLog(stationID uint32, line string) {
 }
 
 // ====================== 持久化（保持不变） ======================
+*/
+
 func saveStations() { /* ... 同之前代码 ... */ }
 func loadStations() { /* ... 同之前代码 ... */ }
