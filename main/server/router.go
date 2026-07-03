@@ -23,8 +23,8 @@ func omsRoutes(router *gin.RouterGroup) {
 }
 
 func gnbRouters(router *gin.RouterGroup) {
-	gnbListLyr := new(controllers.GnbListLyrController)
-	router.GET("", gnbListLyr.HandlerGetPageGnbList)
-	router.POST("", gnbListLyr.HandlerAddGnbList)
-	router.DELETE("", gnbListLyr.HandlerDelGnbList)
+	gnbLyr := new(controllers.GnbLyrController)
+	//router.GET("", gnbListLyr.HandlerGetPageGnbList)
+	router.POST("", gnbLyr.HandlerAddGnb)
+	router.DELETE("", gnbLyr.HandlerDelGnb)
 }

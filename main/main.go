@@ -24,11 +24,6 @@ func main() {
 }
 
 /*
-type BaseStation struct {
-	StationID uint32 `json:"station_id"`
-	IP        string `json:"ip"`
-	Name      string `json:"name,omitempty"` // 可选：站名
-}
 
 var (
 	stations     = make(map[uint32]BaseStation)

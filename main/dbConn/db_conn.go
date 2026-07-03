@@ -7,6 +7,10 @@ import (
 
 var Rdb *redis.Client
 
+func DbConnInit() {
+	InitRedisClient()
+}
+
 func InitRedisClient() (err error) {
 	rdsAddr := conf.CmnConf.DBConn.RedisInfo.Addr + ":" + conf.CmnConf.DBConn.RedisInfo.Port
 	rdsPw := conf.CmnConf.DBConn.RedisInfo.Password
