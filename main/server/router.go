@@ -9,7 +9,7 @@ func NewRouter() *gin.Engine {
 	router := gin.New()
 
 	omsRouter := router.Group("/monitor_agent/v1")
-	gnbRouter := router.Group("/monitor_agent/v1/common/eap_aka")
+	gnbRouter := router.Group("/monitor_agent/v1/gnb")
 
 	omsRoutes(omsRouter)
 	gnbRouters(gnbRouter)
