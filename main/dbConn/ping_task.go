@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -36,34 +37,39 @@ func pingAndLog(bs gnbTypes.BaseStation, seq *uint64) {
 	start := time.Now()
 	ip := strings.TrimSpace(bs.IP)
 
-	// 使用更可靠的方式：先尝试系统 ping（推荐）
 	cmd := exec.Command("ping", "-c", "1", "-W", "2", "-n", ip)
 	output, err := cmd.CombinedOutput()
 
-	rtt := time.Since(start)
 	status := "FAIL"
 	rttMs := 0.0
 
 	if err == nil {
 		status = "OK"
-		// 尝试从输出中提取 rtt（可选）
 		outputStr := string(output)
+
+		// 改进的 rtt 提取逻辑
 		if idx := strings.LastIndex(outputStr, "time="); idx != -1 {
-			// 简单提取
-			rttMs = 5.0 // 可以后续解析，这里先给个合理值
+			// 示例输出: time=0.144 ms
+			part := outputStr[idx+5:] // 跳过 "time="
+			if end := strings.Index(part, " ms"); end != -1 {
+				if val, parseErr := strconv.ParseFloat(strings.TrimSpace(part[:end]), 64); parseErr == nil {
+					rttMs = val
+				}
+			}
 		} else {
-			rttMs = float64(rtt.Milliseconds())
+			// 兜底：使用命令执行时间
+			rttMs = float64(time.Since(start).Milliseconds())
 		}
 	}
 
-	// 生成日志
+	// 日志文件名和写入
 	logFileName := fmt.Sprintf("ping_%s.log", strings.ReplaceAll(ip, ".", ""))
 	logDir := "/var/log/monitor_agent"
-	os.MkdirAll(logDir, 0755)
 
+	os.MkdirAll(logDir, 0755)
 	logPath := filepath.Join(logDir, logFileName)
 
-	logLine := fmt.Sprintf("%s | seq=%06d | %-4s | rtt=%.1f ms\n",
+	logLine := fmt.Sprintf("%s | seq=%06d | %-4s | rtt=%.2f ms\n",
 		time.Now().Format("2006-01-02 15:04:05"),
 		*seq,
 		status,
