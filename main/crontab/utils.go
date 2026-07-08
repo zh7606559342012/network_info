@@ -25,8 +25,14 @@ func Run() {
 		return
 	}
 
+	// 新增：每天凌晨2点执行基站网络异常检测
+	_, err = crontab.AddFunc("0 2 * * *", detectNetworkAnomaly)
+	if err != nil {
+		conf.Log.Errorf("注册网络异常检测定时任务失败: %v", err)
+	}
+
 	crontab.Start()
-	conf.Log.Info("crontab 定时任务已启动 → 每5分钟同步基站缓存")
+	conf.Log.Info("crontab 定时任务已启动 → 每5分钟同步基站缓存 + 每天2点异常检测")
 }
 
 // syncBaseStationCache 核心同步函数
